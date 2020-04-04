@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+      crossorigin="anonymous"
+    />
+    <title>Tambola</title>
+    <script
+      src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+      integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+      integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+      integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+      crossorigin="anonymous"
+    ></script>
+    <style>
+      .info-numbers span {
+        font-size: 3.5rem;
+        font-weight: 300;
+        line-height: 1.2;
+        display: inline-block;
+        padding: 10px;
+        width: 100px;
+        border: 1px solid lightgray;
+      }
+
+      .info-numbers span.no-border {
+        border: none !important;
+      }
+
+      .history {
+        text-align: center;
+      }
+
+      .history-number {
+        font-size: 1.2rem;
+        font-weight: 300;
+        line-height: 1.2;
+        display: inline-block;
+        padding: 5px;
+        width: 50px;
+        border: 1px solid lightgray;
+        text-align: center;
+      }
+
+      @keyframes flip {
+        from {
+          transform: rotateX(0deg);
+        }
+        to {
+          transform: rotateX(360deg);
+        }
+      }
+
+      @-webkit-keyframes flip {
+        from {
+          transform: rotateX(0deg);
+        }
+        to {
+          transform: rotateX(360deg);
+        }
+      }
+
+      .flip-card {
+        animation-name: flip;
+        animation-duration: 2s;
+        animation-timing-function: ease-out;
+        -webkit-animation-name: flip;
+        -webkit-animation-duration: 1s;
+        -webkit-animation-timing-function: ease-out;
+      }
+
+      .d-1{
+        animation-delay: 0ms;
+        -webkit-animation-delay: 0ms;
+      }
+
+      .d-2{
+        animation-delay: 250ms;
+        -webkit-animation-delay: 250ms;
+      }
+
+      .d-3{
+        animation-delay: 500ms;
+        -webkit-animation-delay: 500ms;
+      }
+    </style>
+    <script>
+      $(function(){
+        var d,f,t,p,r,n=[],tm;
+        function speak(t){
+          if(window.speechSynthesis){
+            var m = new SpeechSynthesisUtterance();
+            var v = window.speechSynthesis.getVoices();
+            m.voice = v[$('select#voices').attr('selectedIndex')];
+            m.rate = r / 10;
+            m.pitch = p;
+            m.text = t;
+            m.onend = function(e) {
+              tm=setTimeout(random,d*1000);
+            };
+            speechSynthesis.speak(m);
+          } else {
+            tm=setTimeout(random,d*1000);
+          }
+        }
+        function random(){
+          var rdnm=Math.random();
+          rdnm=parseInt(rdnm*(t-f+1))+f;
+          if(n.length>t-f){
+            alert('All combinations generated');
+            return;
+          }
+          if(n.indexOf(rdnm)!=-1){
+            random();
+            return;
+          }
+          n.push(rdnm);
+          speak('Next number is '+rdnm);
+          $('.info-numbers span').addClass('flip-card').each(function(i){
+            var $this=$(this);
+            if(n.length>i) $this.text(n[n.length-i-1]).removeClass('d-none');
+            else if(!$this.is('.d-none')){
+              $this.addClass('d-none');
+            }
+          });
+          setTimeout(function(_){_.removeClass('flip-card');},2000,$('.info-numbers span').addClass('flip-card'));
+          $('.history .n-'+n[n.length-1]).removeClass('invisible');
+        }
+        function historyTiles(){
+          var h=$('.history'),
+          s=$('<span class="history-number shadow-sm m-1 invisible">');
+          for(var i=f,c;i<=t;i++){
+            c=s.clone();
+            c.text(i);
+            c.addClass('n-'+i);
+            h.append(c);
+            if(i%10==0) h.append($('<br>'));
+          }
+        }
+        function start(){
+          d=parseFloat($('#delay').val());
+          f=parseInt($('#from').val());
+          t=parseInt($('#to').val());
+          p=parseInt($('#pitch').val());
+          r=parseInt($('#rate').val());
+          $('.start').addClass('d-none');
+          $('.game').removeClass('d-none');
+          historyTiles();
+          random();
+        }
+        window.onbeforeunload=function(){
+          return "Are you sure?";
+        }
+        $('button.btn#start').click(start);
+        $('button.btn#pause').click(function(){
+          alert('Press OK to continue');
+        });
+        $('button.btn#next').click(function(){
+          clearTimeout(tm);
+          random();
+        });
+        if(window.speechSynthesis){
+          setTimeout(function(){
+            var vele=$('select#voices');
+            window.speechSynthesis.getVoices().forEach(function(v){
+              vele.append($('<option>').text(v.name));
+            });
+          },10);
+        }
+
+      });
+    </script>
+  </head>
+  <body>
+    <nav class="navbar navbar-light bg-light">
+      <span class="navbar-brand mb-0 h1">Tambola</span>
+      <span class="navbar-text">
+        Made by <span class="badge badge-pill badge-primary">Ravi</span>
+      </span>
+    </nav>
+    <div class="container mt-2">
+      <div class="game d-none">
+        <div class="row">
+          <div class="col-sm text-center">
+            <div class="display-4">Next number is</div>
+            <div class="info-numbers">
+              <span class="shadow-lg d-1">56</span><br />
+              <span class="shadow d-2">1</span><br />
+              <span class="shadow-sm d-3">64</span
+              ><!--br />
+              <span class="shadow-sm">5</span><br />
+              <span class="shadow-sm">78</span-->
+            </div>
+            <span class="float-right">
+              <button class="btn btn-primary" id="next">
+                Next
+              </button>
+              <button class="btn btn-warning" id="pause">
+                Pause
+              </button>
+
+            </span>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-sm">
+            <div class="card mt-3">
+              <div class="card-body">
+                <div class="card-title">History</div>
+                <div class="history"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="start">
+        <div class="row">
+          <div class="col-sm">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Game Settings</h5>
+                <div class="row">
+                  <div class="col-sm-6">
+                    <div class="input-group mb-3">
+                      <div class="input-group-prepend">
+                        <span class="input-group-text" id="basic-addon1"
+                          >Delay</span
+                        >
+                      </div>
+                      <input
+                        type="number"
+                        class="form-control"
+                        placeholder="Delay"
+                        id="delay"
+                        autofocus
+                        value="3"
+                      />
+                      <div class="input-group-append">
+                        <div class="input-group-text">secs</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-sm-6">
+                    <div class="input-group mb-3">
+                      <div class="input-group-prepend">
+                        <span class="input-group-text" id="basic-addon1"
+                          >Range</span
+                        >
+                      </div>
+                      <input
+                        type="number"
+                        class="form-control"
+                        placeholder="From"
+                        id="from"
+                        value="1"
+                      />
+                      <input
+                        type="number"
+                        class="form-control"
+                        placeholder="To"
+                        id="to"
+                        value="90"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Voice Settings</h5>
+                <div class="row">
+                  <div class="col-sm-4">
+                    <div class="input-group mb-3">
+                      <div class="input-group-prepend">
+                        <span class="input-group-text" id="basic-addon1"
+                          >Voice</span
+                        >
+                      </div>
+                      <select id="voices" class="form-control"></select>
+                    </div>
+                  </div>
+                  <div class="col-sm-4">
+                    <div class="input-group mb-3">
+                      <div class="input-group-prepend">
+                        <span class="input-group-text" id="basic-addon1"
+                          >Rate</span
+                        >
+                      </div>
+                      <input
+                        type="number"
+                        class="form-control"
+                        placeholder="0-20"
+                        min="0"
+                        max="20"
+                        id="rate"
+                        value="10"
+                      />
+                    </div>
+                  </div>
+                  <div class="col-sm-4">
+                    <div class="input-group mb-3">
+                      <div class="input-group-prepend">
+                        <span class="input-group-text" id="basic-addon1"
+                          >Pitch</span
+                        >
+                      </div>
+                      <input
+                        type="number"
+                        class="form-control"
+                        placeholder="0-2"
+                        min="0"
+                        max="2"
+                        id="pitch"
+                        value="1"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="row text-right mt-2">
+              <div class="col-sm">
+                <button class="btn btn-primary btn-lg" id="start">Start</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
