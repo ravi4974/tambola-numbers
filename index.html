@@ -105,7 +105,7 @@
           if(window.speechSynthesis){
             var m = new SpeechSynthesisUtterance();
             var v = window.speechSynthesis.getVoices();
-            m.voice = v[$('select#voices').attr('selectedIndex')];
+            m.voice = v[$('select#voices').index()];
             m.rate = r / 10;
             m.pitch = p;
             m.text = t;
